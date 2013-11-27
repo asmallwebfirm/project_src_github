@@ -21,8 +21,9 @@
  *   A release array suitable for use in the primary release theme function.
  */
 function _project_src_github_format_release_info($commitref, $info) {
-  // Root of the project on GitLab.
-  $root = 'https://github.com/' . $info['api']['path_with_namespace'];
+  // Root of the project on GitHub.
+  $github = variable_get('project_src_github_domain', 'https://github.com');
+  $root = $github . '/' . $info['api']['path_with_namespace'];
 
   // Filter $commitref['name'] here, since it's used very often below.
   $commitref['name'] = check_plain($commitref['name']);

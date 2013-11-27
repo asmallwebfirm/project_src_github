@@ -12,6 +12,7 @@
 function project_src_github_uninstall() {
   $variables = array(
     'project_src_github_org',
+    'project_src_github_domain',
   );
 
   foreach ($variables as $variable) {

@@ -117,7 +117,7 @@ function _project_src_github_repackage_tarball($namespace, $project, $version, $
   $tar_extracted = 'temporary://' . $tar_name . '.extract';
   file_prepare_directory($tar_extracted, FILE_CREATE_DIRECTORY);
   $tar = archiver_get_archiver($tar_file);
-  $tar->extract($tar_extracted);
+  $tar->extract(drupal_realpath($tar_extracted));
 
   $source = $tar_extracted . '/' . $project . '-' . $version;
   $destination_dir = 'temporary://' . md5($project . '-' . $version . microtime());
@@ -147,13 +147,13 @@ function _project_src_github_repackage_tarball($namespace, $project, $version, $
     }
 
     // Clean up our new archive.
-    file_unmanaged_delete_recursive($destination_dir);
+    _project_src_github_delete_recursive($destination_dir);
     file_unmanaged_delete($final_extract);
   }
 
   // Clean up all remaining temporary files.
   file_unmanaged_delete($tar_file);
-  file_unmanaged_delete_recursive($tar_extracted);
+  _project_src_github_delete_recursive($tar_extracted);
 
   return $file;
 }

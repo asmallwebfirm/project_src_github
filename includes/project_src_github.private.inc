@@ -97,3 +97,20 @@ function _project_src_github_load_file_by_uri($uri) {
     return FALSE;
   }
 }
+
+
+/**
+ * Replacement for file_unmanaged_delete_recursive() that takes into account
+ * symlinks.
+ *
+ * @see file_unmanaged_delete_recursive()
+ */
+function _project_src_github_delete_recursive($path) {
+  if (is_dir($path)) {
+    foreach(array_diff(scandir($path), array('.', '..')) as $file) {
+      _project_src_github_delete_recursive(drupal_realpath($path) . '/' . $file);
+    }
+    return drupal_rmdir($path);
+  }
+  return drupal_unlink($path);
+}

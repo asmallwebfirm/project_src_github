@@ -398,7 +398,7 @@ class ProjectSrcGithubFileTests extends ProjectSrcGithubBaseCase {
 
       // Clean up all remaining temporary files.
       file_unmanaged_delete($tar_file);
-      file_unmanaged_delete_recursive($tar_extracted);
+      _project_src_github_delete_recursive($tar_extracted);
       if ($managed_file = _project_src_github_load_file_by_uri($get)) {
         file_delete($managed_file);
       }

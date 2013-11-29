@@ -32,13 +32,16 @@ function _project_src_github_format_release_info($commitref, $info) {
   $release['name'] = $info['short_name'] . ' ' . $commitref['name'];
   $release['version'] = $release['tag'] = $commitref['name'];
   $release['date'] = strtotime($commitref['commit']['committed_date']);
+  $release['release_link'] = check_url($root) . '/releases/' . $release['version'];
   if (preg_match_all("/^\\d+\\.x-(\\d+)\\.([x\\d+])-?(.*)?/is", $commitref['name'], $version)) {
     $release['version_major'] = (int) $version[1][0];
     $release['version_patch'] = is_numeric($version[2][0]) ? (int) $version[2][0] : NULL;
     $release['version_extra'] = isset($version[3][0]) ? $version[3][0] : NULL;
+    if (isset($version[3][0]) && $version[3][0] == 'dev') {
+      $release['release_link'] = check_url($root . '/tree/' . substr($release['tag'], 0, -4));
+    }
   }
   $release['status'] = 'published';
-  $release['release_link'] = check_url($root);
 
   // Details related to the download file.
   $release['archive_type'] = 'tar.gz';

@@ -151,6 +151,7 @@ class ProjectSrcGithubXMLTests extends ProjectSrcGithubBaseCase {
    *   The SimpleXMLElement as returned by the xpath query.
    */
   protected function validateReleaseXml($xml) {
+    $github = variable_get('project_src_github_domain', 'https://github.com');
     $repos = $this->github->repositories($this->org);
     $repo = $repos[$this->org . '_module'];
     $branches = $this->github->branches($this->org, $this->org . '_module');
@@ -160,21 +161,22 @@ class ProjectSrcGithubXMLTests extends ProjectSrcGithubBaseCase {
     if (substr($xml->version, -4) == '-dev') {
       $expected_extra = 'dev';
       $real_tag = substr($xml->version, 0, -4);
+      $release_link = $github . '/' . $repo['full_name'] . '/tree/' . $real_tag;
     }
     // Test if we're dealing with an unstable release.
     elseif (preg_match_all('/.*?((unstable|alpha|beta|rc)\\d+)/is', $xml->version, $matches)) {
       $expected_extra = $matches[1][0];
       $real_tag = $xml->version;
+      $release_link = $github . '/' . $repo['full_name'] . '/releases/' . $real_tag;
     }
     else {
       $expected_extra = NULL;
       $real_tag = $xml->version;
+      $release_link = $github . '/' . $repo['full_name'] . '/releases/' . $real_tag;
     }
 
     $name = $this->org . '_module ' . $xml->version;
     $major_version = substr($real_tag, 4, 1);
-    $github = variable_get('project_src_github_domain', 'https://github.com');
-    $release_link = $github . '/' . $repo['full_name'];
     $file_name = 'project-src-github/' . $repo['full_name'] . '/' . $real_tag . '/' . 'download';
 
     $this->assertEqual($xml->name, $name, format_string('Returned the expected release name %arg.', array('%arg' => $xml->name)));

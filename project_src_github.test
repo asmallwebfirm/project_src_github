@@ -435,3 +435,101 @@ class ProjectSrcGithubFileTests extends ProjectSrcGithubBaseCase {
     $this->validateFileMetadata($branches, FALSE);
   }
 }
+
+
+/**
+ * Tests the Project Source: GitHub admin interface.
+ */
+class ProjectSrcGithubAdminTests extends ProjectSrcGithubBaseCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Project Source GitHub - Admin',
+      'description' => 'Tests the Project Source GitHub admin interface.',
+      'group' => 'Project Source GitHub',
+    );
+  }
+
+  function setUp(array $modules = array()) {
+    parent::setUp($modules);
+
+    // Create a user and log it in.
+    $this->admin_user = $this->drupalCreateUser(array(
+      'access administration pages',
+      'administer site configuration',
+      'administer project src',
+      'administer project github src',
+    ));
+    $this->drupalLogin($this->admin_user);
+  }
+
+  /**
+   * Validates a select field's options list against what's expected for the API
+   * version of the project.
+   *
+   * @param string $api
+   *   The API version of the project.
+   * @param array $options
+   *   An array of SimpleXMLElements representing <option> tags.
+   */
+  protected function validateOptionsList($api, $options) {
+    $branches = $this->github->branches('', '', '');
+    $expected = array();
+    foreach ($branches as $branch => $info) {
+      if (preg_match_all("/^(\\d+).x-(\\d+).x$/is", $branch, $versions)) {
+        $api_version = $versions[1][0];
+        $major_version = $versions[2][0];
+        $expected[$api_version . '.x'][$major_version] = TRUE;
+      }
+    }
+
+    $count = 0;
+    foreach ($options as $option) {
+      if (!empty($option['value'])) {
+        $this->assertTrue(isset($expected[$api][(string) $option['value']]), 'Provided option corresponds to valid branch.');
+        $count++;
+      }
+    }
+    $this->assertEqual(count($expected[$api]), $count, 'Number of options provided matches number of valid branches.');
+  }
+
+  /**
+   * Tests that only valid branch names are available as selections for both
+   * supported and recommended releases in the Project Source configuration UI.
+   */
+  public function testProjectSourceAdminUI() {
+    // Load a list of projects, keyed by API version.
+    $branches = $this->github->branches('', '', '');
+    $projects = array();
+    foreach ($branches as $branch => $info) {
+      if (preg_match_all("/^(\\d+).x-(\\d+).x$/is", $branch, $versions)) {
+        $api_version = $versions[1][0];
+        if (!isset($projects[$api_version . '.x'])) {
+          $projects[$api_version . '.x'] = $this->github->repositories($this->org);
+        }
+      }
+    }
+
+    // Load the admin page for project source.
+    $this->drupalGet('admin/config/development/project-src');
+    foreach ($projects as $api => $list) {
+      foreach ($list as $short_name => $project) {
+        // Verify that a field exists for supported majors for this API version.
+        $name = 'project_src_project_settings[' . $short_name . '][' . $api . '][supported_majors][]';
+        $this->assertFieldByName($name, NULL, format_string('Found supported majors field for !project !api', array('!project' => $short_name, '!api' => $api)));
+
+        // Load the field we found above and validate its options list.
+        $field = $this->xpath($this->constructFieldXpath('name', $name));
+        $this->validateOptionsList($api, $this->getAllOptions($field[0]));
+
+        // Verify that the recommended major field exists for this API version.
+        $name = 'project_src_project_settings[' . $short_name . '][' . $api . '][recommended_major]';
+        $this->assertFieldByName($name, NULL, format_string('Found recommended major field for !project !api', array('!project' => $short_name, '!api' => $api)));
+
+        // Load the field we found above and validate its options list.
+        $field = $this->xpath($this->constructFieldXpath('name', $name));
+        $this->validateOptionsList($api, $this->getAllOptions($field[0]));
+      }
+    }
+  }
+}

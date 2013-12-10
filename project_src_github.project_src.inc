@@ -222,3 +222,29 @@ function project_src_github_project_src_releases($short_name, $api_version, $inf
 
   return $releases + $dev_releases;
 }
+
+
+/**
+ * Implements hook_project_src_settings_alter().
+ */
+function project_src_github_project_src_settings_alter(&$settings, $context, $setting) {
+  // Provide sane options for supported major versions (i.e. based on actual
+  // branches, not just a default list that doesn't correspond to anything).
+  if ($setting == 'supported_majors' || $setting == 'recommended_major') {
+    $real_options = array();
+
+    // Parse the actual, available branches.
+    $api_version = $context['project']['api_version'];
+    if (isset($context['project']['api']['branches'][$api_version])) {
+      $branches = $context['project']['api']['branches'][$api_version];
+      foreach ($branches as $branch => $info) {
+        if (preg_match_all("/^(\\d+).x-(\\d+).x$/is", $branch, $versions)) {
+          $real_options[$versions[2][0]] = $branch;
+        }
+      }
+    }
+
+    // Set our real options.
+    $settings['element']['#options'] = $real_options;
+  }
+}

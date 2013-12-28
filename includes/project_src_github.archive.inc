@@ -21,6 +21,11 @@
  *   The archive as a string, suitable for streaming.
  */
 function project_src_github_get_archive($namespace, $project_name, $version) {
+  // Determine whether or not the provided repository is private.
+  $api_version = substr($version, 0, 3);
+  $projects = project_src_get_projects($api_version, 'project_src_github');
+  $private = $projects[$project_name]['private'];
+
   // Provide a shortcut for -dev releases (which should never be saved to the
   // local file system).
   if (substr($version, -1) == 'x') {
@@ -28,7 +33,7 @@ function project_src_github_get_archive($namespace, $project_name, $version) {
     drupal_add_http_header('Content-transfer-encoding', 'binary');
     drupal_add_http_header('Content-disposition', 'attachment; filename="' . $project_name . '-' . $version . '.tar.gz"');
 
-    return _project_src_github_repackage_tarball($namespace, $project_name, $version, '');
+    return _project_src_github_repackage_tarball($namespace, $project_name, $version, '', $private);
   }
 
   // The directory in which we'll ultimately save the re-packaged file.
@@ -54,7 +59,7 @@ function project_src_github_get_archive($namespace, $project_name, $version) {
 
   // Try to repackage the tarball, unless another thread just did it while we
   // were acquiring the lock.
-  $success = file_exists($destination . '/download.tar.gz') || _project_src_github_repackage_tarball($namespace, $project_name, $version, $destination);
+  $success = file_exists($destination . '/download.tar.gz') || _project_src_github_repackage_tarball($namespace, $project_name, $version, $destination, $private);
 
   if (!empty($lock_acquired)) {
     lock_release($lock_name);
@@ -95,17 +100,17 @@ function project_src_github_get_archive($namespace, $project_name, $version) {
  *   The version of the project in question.
  * @param string $managed_destination
  *   The destination directory of the repackaged tarball.
+ * @param bool $private
+ *   Whether or not the archive we're loading corresponds to a private repo.
  *
  * @return string
  *   The contents of a tarball suitable for use with Drush, etc.
- *
- * @todo We should really be storing/managing tarballs after repackaging.
  */
-function _project_src_github_repackage_tarball($namespace, $project, $version, $managed_destination) {
+function _project_src_github_repackage_tarball($namespace, $project, $version, $managed_destination, $private = FALSE) {
   $github = variable_get('project_src_github_domain', 'https://github.com');
   $extension = $namespace . '/' . $project;
   $get = $github . '/' . $extension . '/archive/' . $version . '.tar.gz';
-  $tarball = _project_src_github_file_as_string($get);
+  $tarball = _project_src_github_file_as_string($get, $private);
 
   $file = '';
 

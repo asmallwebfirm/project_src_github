@@ -54,6 +54,7 @@ class GithubApiMock {
       ),
       'html_url' => 'http://example.com/' . $organization . '/' . $module,
       'default_branch' => '7.x-2.x',
+      'private' => FALSE,
     );
 
     return $repos;

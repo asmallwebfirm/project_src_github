@@ -58,18 +58,35 @@ function _project_src_github_format_release_info($commitref, $info) {
  *
  * @param string $file
  *   The URL of the file.
+ * @param bool $private
+ *   Whether or not the repository is private (and should therefore be accessed
+ *   using GitHub API credentials).
  *
  * @return string
  *   The contents of the specified file or FALSE on error.
  */
-function _project_src_github_file_as_string($file) {
-  $contents = FALSE;
-
+function _project_src_github_file_as_string($file, $private = FALSE) {
   $ch = curl_init($file);
+
+  // Set CURL options.
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
   curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
   curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
   curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+
+  // If this repository is private, add HTTP basic auth credentials.
+  if ($private) {
+    $un = variable_get('github_api_username', '');
+    $pw = variable_get('github_api_password', '');
+    curl_setopt($ch, CURLOPT_USERPWD, $un . ':' . $pw);
+  }
+
+  // If a UA string is set, set the UA option. Mostly useful for testing.
+  if ($ua = variable_get('project_src_github_ua_string', FALSE)) {
+    curl_setopt($ch, CURLOPT_USERAGENT, $ua);
+  }
+
+  // Execute the request and return the response.
   $contents = curl_exec($ch);
   curl_close($ch);
 

@@ -31,6 +31,7 @@ function project_src_github_project_src_info() {
       // Initialize this project.
       $project = array();
       $project['short_name'] = check_plain($project_info['name']);
+      $project['private'] = $project_info['private'];
 
       // Project-wide variables.
       $project['title'] = check_plain($project_info['name']);
@@ -128,7 +129,7 @@ function project_src_github_project_src_releases($short_name, $api_version, $inf
 
       // Note, we're not checking locally because dev releases should never be
       // saved to the local filesystem.
-      if ($file_contents = _project_src_github_file_as_string($branch['tarball_url'])) {
+      if ($file_contents = _project_src_github_file_as_string($branch['tarball_url'], $info['private'])) {
         $branch['mdhash'] = md5($file_contents);
         $branch['filesize'] = strlen($file_contents);
       }
@@ -201,7 +202,7 @@ function project_src_github_project_src_releases($short_name, $api_version, $inf
               $tag['filesize'] = strlen($file_contents);
             }
             else {
-              if ($file_contents = _project_src_github_file_as_string($tag['tarball_url'])) {
+              if ($file_contents = _project_src_github_file_as_string($tag['tarball_url'], $info['private'])) {
                 $tag['mdhash'] = md5($file_contents);
                 $tag['filesize'] = strlen($file_contents);
               }

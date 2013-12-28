@@ -213,7 +213,6 @@ class ProjectSrcGithubXMLTests extends ProjectSrcGithubBaseCase {
     $version = '';
     if (preg_match_all('/.*?(\\d+\\.x-\\d+\\..(-.*\\d+)?).*?/is', $xml->url, $matches)) {
       $version = $matches[1][0];
-      $this->verbose('<pre>' . print_r($matches, TRUE) . '</pre>');
     }
     elseif (preg_match_all('', $xml->url, $matches)) {
 
@@ -294,6 +293,10 @@ class ProjectSrcGithubFileTests extends ProjectSrcGithubBaseCase {
       'description' => 'Tests the Project Source GitHub file generation.',
       'group' => 'Project Source GitHub',
     );
+  }
+
+  function setUp() {
+    parent::setUp(array('project_src_github_test'));
   }
 
   /**
@@ -433,6 +436,31 @@ class ProjectSrcGithubFileTests extends ProjectSrcGithubBaseCase {
     $branches = $this->github->branches($this->org, $this->org . '_module');
     unset($branches['master']);
     $this->validateFileMetadata($branches, FALSE);
+  }
+
+  /**
+   * Tests that private repositories are loaded using https basic auth.
+   */
+  public function testProjectSourcePrivateRepositoryFiles() {
+    // Set GitHub API credentials.
+    $un = 'drewpaul';
+    variable_set('github_api_username', $un);
+    $pw = 'Dr3Wp4ulP@SSW0RD';
+    variable_set('github_api_password', $pw);
+
+    // Set our custom user-agent to ensure we hit the right DB/prefix/instance.
+    if (preg_match('/simpletest\d+/', $this->databasePrefix, $matches)) {
+      variable_set('project_src_github_ua_string', drupal_generate_test_ua($matches[0]));
+    }
+
+    // Ensure that basic auth credentials are included for private repos.
+    $path = $this->getAbsoluteUrl('github-api-file-test');
+    $response = _project_src_github_file_as_string($path, TRUE);
+    $this->assertTrue(strpos($response, $un) !== FALSE && strpos($response, $pw) !== FALSE, 'HTTP basic auth credentials included for private repo.');
+
+    // Ensure that basic auth credentials are not included for public repos.
+    $response = _project_src_github_file_as_string($path, FALSE);
+    $this->assertTrue(strpos($response, $un) === FALSE && strpos($response, $pw) === FALSE, 'HTTP basic auth credentials excluded for public repo.');
   }
 }
 

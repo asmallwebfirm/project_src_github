@@ -559,5 +559,22 @@ class ProjectSrcGithubAdminTests extends ProjectSrcGithubBaseCase {
         $this->validateOptionsList($api, $this->getAllOptions($field[0]));
       }
     }
+
+    // Load our admin UI, ensure our field exists, is save-able.
+    $var = 'project_src_github_org';
+    $this->drupalGet('admin/config/development/project-src/github');
+    $this->assertFieldByName($var, NULL, 'Found GitHub organization field.');
+    $this->drupalPost(NULL, array($var => $this->org), 'Save configuration');
+    $this->assertFieldByName($var, $this->org, 'GitHub organization field saved.');
+    $this->assertEqual(variable_get($var, ''), $this->org, 'GitHub organization variable saved.');
+
+    // Set a cached item, ensure it exists in cache.
+    $cid = 'project_src_github_anything';
+    cache_set($cid, 'data', 'cache');
+    $this->assertNotEqual(FALSE, cache_get($cid, 'cache'), 'Project Source GitHub cache item set.');
+
+    // Clear the cache through the GUI and ensure it was actually cleared.
+    $this->drupalPost(NULL, array(), 'Clear project cache');
+    $this->assertFalse(cache_get($cid, 'cache'), 'Project Source GitHub cache cleared via admin UI.');
   }
 }

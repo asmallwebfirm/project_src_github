@@ -18,9 +18,10 @@ require_once(dirname(__FILE__) . '/includes/project_src_github.private.inc');
  */
 function project_src_github_menu() {
   // Admin callback.
-  $items['admin/config/development/github-src'] = array(
+  $items['admin/config/development/project-src/github'] = array(
     'title' => 'Project Source: GitHub',
     'description' => 'Configure GitHub API options for the Project Source module.',
+    'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('project_src_github_settings'),
     'access arguments' => array('administer project github src'),
@@ -42,6 +43,20 @@ function project_src_github_menu() {
   );
 
   return $items;
+}
+
+
+/**
+ * Implements hook_menu_alter().
+ */
+function project_src_github_menu_alter(&$items) {
+  // In the event the user is on an older version of Project Source, provide a
+  // default local task so our settings are easy to find.
+  $items['admin/config/development/project-src/settings'] = array(
+    'title' => 'Global settings',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
 }
 
 

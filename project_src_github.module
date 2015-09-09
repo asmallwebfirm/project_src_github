@@ -111,6 +111,6 @@ function project_src_github_clear_cache() {
  * @return ResultPager
  */
 function project_src_github_get_paginator($client) {
-  $paginatorClass = variable_get('project_src_github_paginator_class', 'GitHub\ResultPager');
+  $paginatorClass = variable_get('project_src_github_paginator_class', 'Github\ResultPager');
   return new $paginatorClass($client);
 }

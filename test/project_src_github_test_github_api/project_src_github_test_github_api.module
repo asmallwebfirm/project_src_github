@@ -193,3 +193,27 @@ class GithubApiMock {
     return $tags;
   }
 }
+
+class GithubPaginatorMock {
+
+  protected $client;
+
+  public function __construct($client) {
+    $this->client = $client;
+  }
+
+  /**
+   * Mimics the GitHub paginator fetchAll method. Primarily relies on the mocks
+   * provided by the client in $api. Currently only designed to work for org
+   * repos.
+   *
+   * @param GithubApiMock $api
+   * @param string $method
+   * @param array $params
+   * @return array
+   */
+  public function fetchAll($api, $method, $params) {
+    return $api->{$method}($params[0]);
+  }
+
+}

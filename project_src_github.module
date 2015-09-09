@@ -102,3 +102,15 @@ function project_src_github_clear_cache() {
   cache_clear_all('project_src_github', 'cache', TRUE);
   cache_clear_all('%/drupal/release-history/', 'cache_page', TRUE);
 }
+
+
+/**
+ * Helper function to return a GitHub API paginator.
+ *
+ * @param GithubClient $client
+ * @return ResultPager
+ */
+function project_src_github_get_paginator($client) {
+  $paginatorClass = variable_get('project_src_github_paginator_class', 'GitHub\ResultPager');
+  return new $paginatorClass($client);
+}

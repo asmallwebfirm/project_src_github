@@ -16,7 +16,9 @@ function project_src_github_project_src_info() {
     $github_client = github_api_client();
     $org = variable_get('project_src_github_org', '');
     try {
-      $response = $github_client->api('organization')->repositories($org);
+      $organizationApi = $github_client->api('organization');
+      $paginator = project_src_github_get_paginator($github_client);
+      $response = $paginator->fetchAll($organizationApi, 'repositories', array($org));
     }
     catch (Exception $e) {
       watchdog('project src github', 'An error occurred when attempting to load repositories for %org from GitHub. Message returned:<br /><br />@msg', array(

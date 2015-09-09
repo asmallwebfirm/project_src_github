@@ -39,6 +39,9 @@ class ProjectSrcGithubBaseCase extends DrupalWebTestCase {
     drupal_flush_all_caches();
     $this->fakeModuleInstall($fake_api);
 
+    // Set up the mock paginator.
+    variable_set('project_src_github_paginator_class', 'GithubPaginatorMock');
+
     // Set relevant Project Source: GitHub variables.
     variable_set('project_src_github_org', $this->org);
     $module = drupal_get_path('module', $fake_api);
